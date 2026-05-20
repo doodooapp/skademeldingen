@@ -1,13 +1,36 @@
 const express = require('express');
 const cors = require('cors');
+const session = require('express-session');
 const pdftk = require('node-pdftk');
 const path = require('path');
 const fs = require('fs');
 const os = require('os');
+const { passport, requireAuth, register: registerAuth } = require('./auth');
 
 const app = express();
 app.use(cors());
 app.use(express.json({ limit: '5mb' }));
+app.use(express.urlencoded({ extended: true }));
+
+app.use(session({
+  secret: process.env.SESSION_SECRET || 'change-me-in-production',
+  resave: false,
+  saveUninitialized: false,
+  cookie: { secure: process.env.NODE_ENV === 'production', httpOnly: true, maxAge: 30 * 24 * 60 * 60 * 1000 },
+}));
+
+app.use(passport.initialize());
+app.use(passport.session());
+
+// Auth routes (/login, /verify, /auth/*)
+registerAuth(app);
+
+// Serve main app — auth required
+app.get('/', requireAuth, (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+
+// Static assets (CSS, JS, images) — no auth needed so login page assets load
 app.use(express.static(path.join(__dirname, 'public')));
 
 const PDF_MAL = path.join(__dirname, 'skjema.pdf');
@@ -79,7 +102,7 @@ function lagFDF(data) {
   return `%FDF-1.2\n1 0 obj\n<<\n/FDF\n<<\n/Fields [\n${felt.join('\n')}\n]\n>>\n>>\nendobj\ntrailer\n<< /Root 1 0 R >>\n%%EOF\n`;
 }
 
-app.post('/fyll', async (req, res) => {
+app.post('/fyll', requireAuth, async (req, res) => {
   try {
     const data = req.body;
     const fdf = lagFDF(data);

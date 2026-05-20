@@ -7,9 +7,9 @@ WORKDIR /app
 COPY package.json ./
 RUN npm install --production
 
-COPY index.js ./
+COPY index.js auth.js db.js ./
 COPY skjema.pdf ./
-COPY index.html ./public/index.html
+COPY public/ ./public/
 
 EXPOSE 3000
 CMD ["node", "index.js"]
