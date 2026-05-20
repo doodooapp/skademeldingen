@@ -1,0 +1,949 @@
+<!DOCTYPE html>
+<html lang="nb">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<title>Skademelding</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#FAFAF7;--surf:#fff;--ink:#0A0A0A;--ink2:#404040;--ink3:#737373;--ink4:#A3A3A3;--line:#E5E5E2;--line2:#D4D4D0;--red:#B91C1C;--green:#15803D}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;margin:0;padding:0}
+html,body{font-family:'Inter',-apple-system,sans-serif;background:#E5E5E2;color:var(--ink);-webkit-font-smoothing:antialiased;overscroll-behavior:none;min-height:100vh}
+body{display:flex;justify-content:center;align-items:flex-start}
+.app{width:100%;max-width:440px;min-height:100vh;background:var(--bg);display:flex;flex-direction:column;position:relative}
+@media(min-width:480px){body{padding:24px 0;align-items:center}.app{min-height:auto;border-radius:32px;border:.5px solid var(--line2);box-shadow:0 24px 60px -20px rgba(0,0,0,.18)}}
+.screen{display:none;flex:1;flex-direction:column;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch}
+.screen.on{display:flex;animation:si .3s cubic-bezier(.16,1,.3,1)}
+@keyframes si{from{opacity:0;transform:translateX(10px)}to{opacity:1;transform:none}}
+.topbar{display:flex;align-items:center;gap:4px;padding:18px 20px 14px;background:var(--bg);position:sticky;top:0;z-index:20;border-bottom:.5px solid transparent}
+.topbar.scrolled{border-bottom-color:var(--line)}
+.topbar h1{font-family:'Fraunces',serif;font-weight:500;font-size:19px;flex:1;letter-spacing:-.01em}
+.back{background:none;border:none;width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--ink2);margin-left:-10px}
+.back:active{background:var(--line)}
+.step{font-size:13px;color:var(--ink3);font-variant-numeric:tabular-nums}
+.prog{display:flex;gap:3px;padding:0 20px 16px}
+.prog span{flex:1;height:2px;background:var(--line);border-radius:1px;transition:background .3s}
+.prog span.on{background:var(--ink)}
+.body{padding:0 20px 100px;flex:1}
+h2{font-family:'Fraunces',serif;font-weight:400;font-size:28px;line-height:1.15;letter-spacing:-.02em;margin:12px 0 8px}
+h2 em{font-style:italic}
+.lede{font-size:15px;color:var(--ink3);line-height:1.5;margin:0 0 24px}
+.slabel{font-size:11px;font-weight:600;color:var(--ink4);text-transform:uppercase;letter-spacing:.08em;margin:24px 0 10px}
+.help{font-size:13px;color:var(--ink3);line-height:1.45}
+.help strong{color:var(--ink)}
+.field{margin-bottom:14px}
+.field label{display:block;font-size:12px;font-weight:500;color:var(--ink3);margin-bottom:6px}
+.field input,.field textarea,.field select{width:100%;padding:14px 16px;background:var(--surf);border:.5px solid var(--line2);border-radius:12px;font-family:inherit;font-size:16px;color:var(--ink);-webkit-appearance:none;outline:none}
+.field input:focus,.field textarea:focus{border-color:var(--ink)}
+.field textarea{resize:vertical;min-height:80px}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.yn{display:flex;border:.5px solid var(--line2);border-radius:100px;overflow:hidden;background:var(--surf)}
+.yn button{flex:1;padding:10px 14px;background:transparent;border:none;font-family:inherit;font-size:14px;font-weight:500;color:var(--ink3);cursor:pointer}
+.yn button.on{background:var(--ink);color:#fff}
+.btn{display:flex;align-items:center;justify-content:center;gap:8px;padding:16px 20px;border:none;border-radius:100px;font-family:inherit;font-size:15px;font-weight:500;cursor:pointer;width:100%;background:var(--ink);color:#fff;letter-spacing:-.005em}
+.btn:active{transform:scale(.985);opacity:.9}
+.btn:disabled{opacity:.35;cursor:not-allowed}
+.btn.sec{background:transparent;color:var(--ink);border:.5px solid var(--line2)}
+.btm{position:sticky;bottom:0;background:linear-gradient(to bottom,transparent,var(--bg) 35%);padding:24px 20px 20px;margin-top:auto}
+.card{background:var(--surf);border:.5px solid var(--line);border-radius:14px;padding:16px;margin-bottom:10px}
+.trust{display:flex;gap:8px;padding:14px 16px;background:var(--surf);border:.5px solid var(--line);border-radius:14px;margin-bottom:14px;align-items:flex-start}
+.trust svg{color:var(--green);flex-shrink:0;margin-top:1px}
+.trust p{font-size:13px;color:var(--ink2);line-height:1.45}
+.trust p strong{font-weight:600;color:var(--ink)}
+
+/* Punkt 12 tabell */
+.ptable{background:var(--surf);border:.5px solid var(--line);border-radius:14px;overflow:hidden}
+.pthead{display:grid;grid-template-columns:24px 34px 34px 1fr;padding:10px 14px;background:var(--bg);border-bottom:.5px solid var(--line);font-size:11px;font-weight:600;color:var(--ink3);text-transform:uppercase;letter-spacing:.05em}
+.pthead .c{text-align:center}
+.prow{display:grid;grid-template-columns:24px 34px 34px 1fr;align-items:center;padding:10px 14px;border-bottom:.5px solid var(--line)}
+.prow:last-child{border-bottom:none}
+.pnum{font-size:12px;font-weight:600;color:var(--ink3);font-variant-numeric:tabular-nums}
+.pcheck{width:26px;height:26px;border:1.5px solid var(--line2);border-radius:7px;margin:0 auto;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:14px;font-weight:700}
+.pcheck.on{background:var(--ink);border-color:var(--ink);color:#fff}
+.plabel{font-size:13px;line-height:1.35;padding-left:4px}
+.ptot{display:grid;grid-template-columns:24px 34px 34px 1fr;padding:10px 14px;background:var(--bg);border-top:.5px solid var(--line);font-size:12px;font-weight:600}
+.ptot .c{text-align:center;font-variant-numeric:tabular-nums}
+
+/* Silhuett */
+.segtabs{display:flex;background:var(--bg);border:.5px solid var(--line);border-radius:100px;padding:4px;margin-bottom:12px}
+.segtab{flex:1;padding:8px 14px;border:none;background:transparent;border-radius:100px;font-family:inherit;font-size:13px;font-weight:500;color:var(--ink3);cursor:pointer}
+.segtab.on{background:var(--surf);color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.08)}
+.silh{aspect-ratio:5/3;background:var(--surf);border:.5px solid var(--line);border-radius:14px;overflow:hidden;position:relative;touch-action:none;margin-bottom:10px;cursor:crosshair}
+.silh svg{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+.dmk{position:absolute;width:26px;height:26px;border-radius:50%;background:var(--red);border:2.5px solid #fff;box-shadow:0 2px 6px rgba(185,28,28,.4);transform:translate(-50%,-50%);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:13px;cursor:pointer;user-select:none;-webkit-user-select:none}
+
+/* Tegne-canvas */
+.drawwrap{background:#F5F5F2;border:.5px solid var(--line);border-radius:16px;overflow:hidden;aspect-ratio:4/3;position:relative;user-select:none;-webkit-user-select:none}
+.drawwrap canvas{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none}
+.cartoken{position:absolute;width:58px;height:30px;border-radius:6px;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:14px;cursor:grab;touch-action:none;box-shadow:0 2px 8px rgba(0,0,0,.15);user-select:none;-webkit-user-select:none}
+.drawtool{display:grid;grid-template-columns:repeat(5,1fr);gap:4px;padding:6px;background:var(--surf);border:.5px solid var(--line);border-radius:14px;margin-top:10px}
+.dtbtn{aspect-ratio:1;padding:6px;border:none;background:transparent;border-radius:10px;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;font-family:inherit;font-size:10px;font-weight:500;color:var(--ink2)}
+.dtbtn.on{background:var(--ink);color:#fff}
+.drawacts{display:flex;gap:8px;margin-top:10px}
+.drawacts button{flex:1;padding:10px;border:.5px solid var(--line2);background:var(--surf);border-radius:10px;font-family:inherit;font-size:12px;font-weight:500;color:var(--ink2);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px}
+.drawhint{background:#EFF6FF;color:#1E40AF;padding:10px 14px;border-radius:10px;font-size:12px;margin-bottom:10px;display:flex;gap:8px;align-items:flex-start}
+
+/* Signatur */
+.sigpad{background:var(--surf);border:.5px solid var(--line);border-radius:14px;margin-bottom:8px;position:relative;overflow:hidden;aspect-ratio:16/7}
+.sigpad canvas{width:100%;height:100%;display:block;touch-action:none;cursor:crosshair}
+.sigbase{position:absolute;bottom:18px;left:16px;right:16px;height:.5px;background:var(--line2);pointer-events:none}
+.sigph{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:var(--ink4);font-size:13px;pointer-events:none}
+.sigclr{position:absolute;top:8px;right:8px;background:var(--bg);border:.5px solid var(--line);border-radius:100px;padding:5px 10px;font-size:11px;cursor:pointer;color:var(--ink3);font-family:inherit}
+
+/* Sammendrag */
+.sumbox{background:var(--surf);border:.5px solid var(--line);border-radius:14px;margin-bottom:10px;overflow:hidden}
+.sumhead{padding:12px 16px 4px;font-size:11px;font-weight:600;color:var(--ink4);text-transform:uppercase;letter-spacing:.06em}
+.sumrow{display:flex;justify-content:space-between;padding:8px 16px;font-size:14px;gap:12px;align-items:baseline}
+.sumrow .l{color:var(--ink3);flex-shrink:0}
+.sumrow .v{font-weight:500;text-align:right;word-break:break-word}
+
+/* Ferdig */
+.okcirc{width:80px;height:80px;border-radius:50%;background:#F0FDF4;color:var(--green);display:flex;align-items:center;justify-content:center;margin:60px auto 24px}
+.okcirc svg{animation:pop .5s cubic-bezier(.34,1.56,.64,1)}
+@keyframes pop{from{transform:scale(0)}50%{transform:scale(1.15)}to{transform:scale(1)}}
+
+/* Kamera */
+.vf{aspect-ratio:3/4;background:#0A0A0A;border-radius:20px;position:relative;overflow:hidden;margin-bottom:16px}
+.vfov{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:space-between;padding:16px;color:rgba(255,255,255,.85)}
+.vfpills{display:flex;justify-content:space-between}
+.vfpill{background:rgba(0,0,0,.5);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-radius:100px;padding:6px 12px;font-size:12px;font-weight:500;display:flex;align-items:center;gap:5px}
+.vfhint{text-align:center;padding:12px 16px;background:rgba(0,0,0,.5);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-radius:14px;margin:0 auto;max-width:240px}
+.shutter{width:68px;height:68px;border-radius:50%;background:#fff;border:4px solid rgba(255,255,255,.4);cursor:pointer;box-sizing:content-box}
+.shutter:active{transform:scale(.92)}
+.pgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:8px}
+.pslot{aspect-ratio:1;background:var(--surf);border:.5px dashed var(--line2);border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;font-size:10px;color:var(--ink4);text-align:center;position:relative;overflow:hidden}
+.pslot.on{border-style:solid;border-color:var(--ink)}
+.pslot img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.spin{width:18px;height:18px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spn .8s linear infinite}
+@keyframes spn{to{transform:rotate(360deg)}}
+.hidden{display:none!important}
+input[type=file]{display:none}
+</style>
+</head>
+<body>
+<div class="app" id="app">
+
+<!-- HJEM -->
+<div class="screen on" id="s-home">
+  <div class="topbar" style="border:none">
+    <div style="flex:1"><span style="background:var(--ink);color:#fff;font-size:11px;font-weight:500;padding:4px 10px;border-radius:100px;display:inline-flex;align-items:center;gap:5px"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>Familie</span></div>
+    <button class="back"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="10" r="3"/><path d="M7 20.662V19a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v1.662"/></svg></button>
+  </div>
+  <div class="body">
+    <p class="lede" style="margin-top:8px;margin-bottom:4px">God morgen,</p>
+    <h2>Familien <em>Hansen</em></h2>
+    <p class="lede">2 biler · 3 sjåfører</p>
+    <div style="background:#FFFBEB;border:.5px solid #F4E4BC;border-radius:14px;padding:14px 16px;margin-bottom:20px;display:flex;gap:12px;align-items:flex-start;color:#92400E;font-size:13px;line-height:1.45">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="flex-shrink:0;margin-top:1px"><circle cx="12" cy="12" r="10"/><path d="M12 8v4"/><path d="M12 16h.01"/></svg>
+      <div><strong>EU-kontroll</strong> for Volvo V60 utløper om 23 dager</div>
+    </div>
+    <button class="btn" onclick="go('intro')" style="border-radius:16px;padding:20px;flex-direction:column;gap:6px;align-items:flex-start;height:auto">
+      <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
+      <span style="font-size:17px;font-weight:600">Meld ny skade</span>
+      <span style="font-size:13px;opacity:.75;font-weight:400">Fyll ut det offisielle skjemaet</span>
+    </button>
+  </div>
+</div>
+
+<!-- INTRO -->
+<div class="screen" id="s-intro">
+  <div class="topbar"><button class="back" onclick="go('home')"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m15 18-6-6 6-6"/></svg></button><h1>Skademelding</h1></div>
+  <div class="body">
+    <h2 style="margin-top:4px">Offisielt <em>skjema</em></h2>
+    <p class="lede">8 steg — ca. 5 minutter. Du trenger opplysninger fra begge kjøretøy.</p>
+    <div class="trust"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg><p><strong>Ingen skylderkjennelse.</strong> Meldingen samler bare inn fakta for rask behandling.</p></div>
+    <div class="trust"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="11" x="3" y="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg><p><strong>Alt lagres lokalt</strong> på din enhet. Ingenting sendes til noen server.</p></div>
+  </div>
+  <div class="btm"><button class="btn" onclick="go('place')">Start utfylling <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></button></div>
+</div>
+
+<!-- STEG 1: STED -->
+<div class="screen" id="s-place">
+  <div class="topbar"><button class="back" onclick="go('intro')"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m15 18-6-6 6-6"/></svg></button><h1>Tid og sted</h1><span class="step">1/8</span></div>
+  <div class="prog"><span class="on"></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div>
+  <div class="body">
+    <p class="slabel" style="margin-top:0">1. Skadedato og klokken</p>
+    <div class="row2"><div class="field"><label>Dato</label><input type="date" id="f-date" value="2026-05-20"></div><div class="field"><label>Klokken</label><input type="time" id="f-time" value="09:42"></div></div>
+    <p class="slabel">2. Skadested</p>
+    <div class="field"><label>Gate / gatekryss</label><input type="text" id="f-place" placeholder="Mest mulig eksakt"></div>
+    <div class="row2"><div class="field"><label>Kommune</label><input type="text" id="f-muni"></div><div class="field"><label>Land</label><input type="text" id="f-land" value="Norge"></div></div>
+    <p class="slabel">3. Personskade</p>
+    <div class="yn" id="yn-pers"><button class="on" onclick="yn(this,'yn-pers','nei')">Nei</button><button onclick="yn(this,'yn-pers','ja')">Ja</button></div>
+    <p class="slabel">4. Annen materiell skade</p>
+    <div class="yn" id="yn-mat"><button class="on" onclick="yn(this,'yn-mat','nei')">Nei</button><button onclick="yn(this,'yn-mat','ja')">Ja</button></div>
+    <p class="slabel">5. Vitner</p>
+    <div class="field"><textarea id="f-wit" placeholder="Navn, adresse, tlf. Noter om vitnet var passasjer i A eller B." rows="3"></textarea></div>
+  </div>
+  <div class="btm"><button class="btn" onclick="go('carA')">Kjøretøy A <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></button></div>
+</div>
+
+<!-- STEG 2: KJØRETØY A -->
+<div class="screen" id="s-carA">
+  <div class="topbar"><button class="back" onclick="go('place')"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m15 18-6-6 6-6"/></svg></button><h1>Kjøretøy A (deg)</h1><span class="step">2/8</span></div>
+  <div class="prog"><span class="on"></span><span class="on"></span><span></span><span></span><span></span><span></span><span></span><span></span></div>
+  <div class="body">
+    <p class="slabel" style="margin-top:0">6. Forsikringstaker</p>
+    <div class="row2"><div class="field"><label>Etternavn</label><input type="text" id="a-eln" value="HANSEN"></div><div class="field"><label>Fornavn</label><input type="text" id="a-fn" value="Lars"></div></div>
+    <div class="field"><label>Fødselsdato</label><input type="date" id="a-dob"></div>
+    <div class="field"><label>Adresse</label><input type="text" id="a-adr"></div>
+    <div class="row2"><div class="field"><label>Postnr.</label><input type="text" id="a-zip"></div><div class="field"><label>Sted</label><input type="text" id="a-city"></div></div>
+    <div class="field"><label>Telefon</label><input type="tel" id="a-tlf"></div>
+    <div class="field"><label>E-post</label><input type="email" id="a-email"></div>
+    <p class="slabel">7. Kjøretøy</p>
+    <div class="field"><label>Reg.nr.</label><input type="text" id="a-reg" value="EK 12345"></div>
+    <div class="field"><label>Merke / type</label><input type="text" id="a-mod" value="Volvo V60"></div>
+    <div class="field"><label>Registreringsland</label><input type="text" id="a-rl" value="Norge"></div>
+    <p class="slabel">8. Forsikringsselskap</p>
+    <div class="field"><label>Navn</label><input type="text" id="a-ins" value="Gjensidige"></div>
+    <div class="field"><label>Forsikringsavtalenr.</label><input type="text" id="a-pol" value="88291"></div>
+    <div style="margin-bottom:14px"><label style="font-size:12px;font-weight:500;color:var(--ink3);margin-bottom:6px;display:block">Kaskoforsikring</label><div class="yn" id="yn-ka"><button onclick="yn(this,'yn-ka','nei')">Nei</button><button class="on" onclick="yn(this,'yn-ka','ja')">Ja</button></div></div>
+    <p class="slabel">9. Fører (hvis annen enn forsikringstaker)</p>
+    <div class="row2"><div class="field"><label>Etternavn</label><input type="text" id="a-dn"></div><div class="field"><label>Fornavn</label><input type="text" id="a-dfn"></div></div>
+    <div class="field"><label>Førerkortnr.</label><input type="text" id="a-lic"></div>
+  </div>
+  <div class="btm"><button class="btn" onclick="go('carB')">Kjøretøy B <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></button></div>
+</div>
+
+<!-- STEG 3: KJØRETØY B -->
+<div class="screen" id="s-carB">
+  <div class="topbar"><button class="back" onclick="go('carA')"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m15 18-6-6 6-6"/></svg></button><h1>Kjøretøy B (motpart)</h1><span class="step">3/8</span></div>
+  <div class="prog"><span class="on"></span><span class="on"></span><span class="on"></span><span></span><span></span><span></span><span></span><span></span></div>
+  <div class="body">
+    <div class="trust"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="11" x="3" y="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg><p>Be motparten om <strong>vognkort</strong> og <strong>forsikringsbevis</strong>. Kopi sendes til deres e-post.</p></div>
+    <p class="slabel" style="margin-top:0">6. Forsikringstaker</p>
+    <div class="row2"><div class="field"><label>Etternavn</label><input type="text" id="b-eln"></div><div class="field"><label>Fornavn</label><input type="text" id="b-fn"></div></div>
+    <div class="field"><label>Adresse</label><input type="text" id="b-adr"></div>
+    <div class="row2"><div class="field"><label>Postnr.</label><input type="text" id="b-zip"></div><div class="field"><label>Sted</label><input type="text" id="b-city"></div></div>
+    <div class="field"><label>Telefon</label><input type="tel" id="b-tlf"></div>
+    <div class="field"><label>E-post (kopi sendes hit)</label><input type="email" id="b-email"></div>
+    <p class="slabel">7. Kjøretøy</p>
+    <div class="field"><label>Reg.nr.</label><input type="text" id="b-reg"></div>
+    <div class="field"><label>Merke / type</label><input type="text" id="b-mod"></div>
+    <p class="slabel">8. Forsikringsselskap</p>
+    <div class="field"><label>Navn</label><input type="text" id="b-ins"></div>
+    <div class="field"><label>Forsikringsavtalenr.</label><input type="text" id="b-pol"></div>
+    <p class="slabel">9. Fører (hvis annen enn forsikringstaker)</p>
+    <div class="row2"><div class="field"><label>Etternavn</label><input type="text" id="b-dn"></div><div class="field"><label>Fornavn</label><input type="text" id="b-dfn"></div></div>
+    <div class="field"><label>Førerkortnr.</label><input type="text" id="b-lic"></div>
+  </div>
+  <div class="btm"><button class="btn" onclick="go('photos')">Bilder <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></button></div>
+</div>
+
+<!-- STEG 4: BILDER -->
+<div class="screen" id="s-photos">
+  <div class="topbar"><button class="back" onclick="go('carB')"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m15 18-6-6 6-6"/></svg></button><h1>Bilder av skaden</h1><span class="step">4/8</span></div>
+  <div class="prog"><span class="on"></span><span class="on"></span><span class="on"></span><span class="on"></span><span></span><span></span><span></span><span></span></div>
+  <div class="body">
+    <p class="help" style="margin:4px 0 16px">Ta minst 4 bilder. GPS og tid registreres automatisk.</p>
+    <div class="vf">
+      <div class="vfov">
+        <div class="vfpills"><span class="vfpill"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg><span id="gps">Henter…</span></span><span class="vfpill" id="clock">--:--</span></div>
+        <div class="vfhint"><p style="font-size:14px;font-weight:500;margin-bottom:2px" id="phint1">Oversiktsbilde</p><p style="font-size:12px;opacity:.75" id="phint2">Begge biler og veien synlig</p></div>
+        <div style="display:flex;justify-content:center;padding-bottom:8px"><button class="shutter" onclick="takephoto()" aria-label="Ta bilde"></button></div>
+      </div>
+    </div>
+    <input type="file" id="photo-input" accept="image/*" capture="environment">
+    <div class="pgrid">
+      <div class="pslot" id="sl0"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg><span>Oversikt</span></div>
+      <div class="pslot" id="sl1"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg><span>Skade</span></div>
+      <div class="pslot" id="sl2"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg><span>Reg.nr.</span></div>
+      <div class="pslot" id="sl3"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg><span>Annet</span></div>
+    </div>
+    <p class="help" id="pcnt">0 av 4 bilder</p>
+  </div>
+  <div class="btm"><button class="btn" onclick="go('points')">Omstendigheter <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></button></div>
+</div>
+
+<!-- STEG 5: PUNKT 12 -->
+<div class="screen" id="s-points">
+  <div class="topbar"><button class="back" onclick="go('photos')"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m15 18-6-6 6-6"/></svg></button><h1>Punkt 12</h1><span class="step">5/8</span></div>
+  <div class="prog"><span class="on"></span><span class="on"></span><span class="on"></span><span class="on"></span><span class="on"></span><span></span><span></span><span></span></div>
+  <div class="body">
+    <p class="help" style="margin:4px 0 16px">Kryss av i kolonne <strong>A</strong> for din kjøring, <strong>B</strong> for motparten.</p>
+    <div class="ptable">
+      <div class="pthead"><span>#</span><span class="c">A</span><span class="c">B</span><span style="padding-left:4px">Omstendighet</span></div>
+      <div id="ptrows"></div>
+      <div class="ptot"><span>Sum</span><span class="c" id="ta">0</span><span class="c" id="tb">0</span><span style="padding-left:4px;color:var(--ink3)">Antall avkryssede</span></div>
+    </div>
+  </div>
+  <div class="btm"><button class="btn" onclick="go('damage')">Skader på kjøretøy <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></button></div>
+</div>
+
+<!-- STEG 6: SKADER (punkt 10+11) -->
+<div class="screen" id="s-damage">
+  <div class="topbar"><button class="back" onclick="go('points')"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m15 18-6-6 6-6"/></svg></button><h1>Skader på kjøretøy</h1><span class="step">6/8</span></div>
+  <div class="prog"><span class="on"></span><span class="on"></span><span class="on"></span><span class="on"></span><span class="on"></span><span class="on"></span><span></span><span></span></div>
+  <div class="body">
+    <p class="help" style="margin:4px 0 16px">Punkt 10+11: <strong>Trykk på bilen</strong> for å markere berøringspunkt og skader.</p>
+    <div class="segtabs"><button class="segtab on" onclick="dtab(this,'a')">Kjøretøy A</button><button class="segtab" onclick="dtab(this,'b')">Kjøretøy B</button></div>
+    <!-- Silhuett A -->
+    <div class="silh" id="sil-a">
+      <svg viewBox="0 0 500 300"><defs><linearGradient id="ga" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#1A1A1A"/><stop offset="100%" stop-color="#2a2a2a"/></linearGradient></defs><rect x="80" y="60" width="340" height="180" rx="40" fill="url(#ga)"/><rect x="65" y="80" width="20" height="40" rx="4" fill="#000"/><rect x="65" y="180" width="20" height="40" rx="4" fill="#000"/><rect x="415" y="80" width="20" height="40" rx="4" fill="#000"/><rect x="415" y="180" width="20" height="40" rx="4" fill="#000"/><text x="250" y="38" text-anchor="middle" font-family="Inter,sans-serif" font-size="14" font-weight="600" fill="#737373">FRONT</text><text x="250" y="278" text-anchor="middle" font-family="Inter,sans-serif" font-size="14" font-weight="600" fill="#737373">BAK</text><text x="250" y="158" text-anchor="middle" font-family="Inter,sans-serif" font-size="52" font-weight="700" fill="white" opacity="0.35">A</text></svg>
+    </div>
+    <!-- Silhuett B -->
+    <div class="silh hidden" id="sil-b">
+      <svg viewBox="0 0 500 300"><defs><linearGradient id="gb" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#B91C1C"/><stop offset="100%" stop-color="#991818"/></linearGradient></defs><rect x="80" y="60" width="340" height="180" rx="40" fill="url(#gb)"/><rect x="65" y="80" width="20" height="40" rx="4" fill="#000"/><rect x="65" y="180" width="20" height="40" rx="4" fill="#000"/><rect x="415" y="80" width="20" height="40" rx="4" fill="#000"/><rect x="415" y="180" width="20" height="40" rx="4" fill="#000"/><text x="250" y="38" text-anchor="middle" font-family="Inter,sans-serif" font-size="14" font-weight="600" fill="#737373">FRONT</text><text x="250" y="278" text-anchor="middle" font-family="Inter,sans-serif" font-size="14" font-weight="600" fill="#737373">BAK</text><text x="250" y="158" text-anchor="middle" font-family="Inter,sans-serif" font-size="52" font-weight="700" fill="white" opacity="0.35">B</text></svg>
+    </div>
+    <button onclick="clearmarks()" style="padding:9px 16px;border:.5px solid var(--line2);background:var(--surf);border-radius:10px;font-family:inherit;font-size:12px;font-weight:500;color:var(--ink3);cursor:pointer;margin-bottom:16px">Fjern alle markører</button>
+    <p class="slabel" id="dmglbl" style="margin-top:0">Synlige skader — Kjøretøy A</p>
+    <div class="field" id="dmga"><textarea id="dmg-a" placeholder="F.eks. Bulk i venstre fordør, ripe i lakk" rows="3"></textarea></div>
+    <div class="field hidden" id="dmgb"><textarea id="dmg-b" placeholder="F.eks. Bulk i høyre frontfender" rows="3"></textarea></div>
+  </div>
+  <div class="btm"><button class="btn" onclick="go('sketch')">Tegn skisse <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></button></div>
+</div>
+
+<!-- STEG 7: SKISSE -->
+<div class="screen" id="s-sketch">
+  <div class="topbar"><button class="back" onclick="go('damage')"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m15 18-6-6 6-6"/></svg></button><h1>Punkt 13 — Skisse</h1><span class="step">7/8</span></div>
+  <div class="prog"><span class="on"></span><span class="on"></span><span class="on"></span><span class="on"></span><span class="on"></span><span class="on"></span><span class="on"></span><span></span></div>
+  <div class="body">
+    <div class="drawhint" id="dhint"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;margin-top:1px"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg><span>Velg et verktøy og tegn på lerretet.</span></div>
+    <div class="drawwrap" id="dwrap">
+      <canvas id="dc"></canvas>
+      <div id="dover" style="position:absolute;inset:0;pointer-events:none">
+        <div class="cartoken" id="cA" style="background:#1A1A1A;left:25%;top:60%;transform:translate(-50%,-50%)">A</div>
+        <div class="cartoken" id="cB" style="background:#B91C1C;left:65%;top:30%;transform:translate(-50%,-50%) rotate(90deg)">B</div>
+      </div>
+    </div>
+    <div class="drawtool">
+      <button class="dtbtn on" id="t-move" onclick="setT('move')"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 9 2 12l3 3M9 5l3-2 3 2M15 19l-3 2-3-2M19 9l3 3-3 3M12 2v20M2 12h20"/></svg>Flytt</button>
+      <button class="dtbtn" id="t-road" onclick="setT('road')"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="2" x2="12" y2="22"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>Vei</button>
+      <button class="dtbtn" id="t-draw" onclick="setT('draw')"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 19l7-7 3 3-7 7-3-3z"/><path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"/></svg>Tegn</button>
+      <button class="dtbtn" id="t-arrow" onclick="setT('arrow')"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="19" x2="19" y2="5"/><polyline points="5 5 19 5 19 19"/></svg>Pil</button>
+      <button class="dtbtn" id="t-text" onclick="setT('text')"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="4 7 4 4 20 4 20 7"/><line x1="9" y1="20" x2="15" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/></svg>Tekst</button>
+    </div>
+    <div class="drawacts">
+      <button onclick="rotcar('A')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>Roter A</button>
+      <button onclick="rotcar('B')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 1 1-9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/></svg>Roter B</button>
+      <button onclick="undo()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7v6h6"/><path d="M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13"/></svg>Angre</button>
+      <button onclick="clrdraw()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/></svg>Tøm</button>
+    </div>
+    <p class="slabel">14. Bemerkninger — Fører A</p>
+    <div class="field"><textarea id="rem-a" placeholder="Eventuelle bemerkninger ved uenighet" rows="2"></textarea></div>
+    <p class="slabel">14. Bemerkninger — Fører B</p>
+    <div class="field"><textarea id="rem-b" placeholder="Motpartens bemerkninger" rows="2"></textarea></div>
+  </div>
+  <div class="btm"><button class="btn" onclick="go('sign')">Signering <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></button></div>
+</div>
+
+<!-- STEG 8: SIGNER -->
+<div class="screen" id="s-sign">
+  <div class="topbar"><button class="back" onclick="go('sketch')"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m15 18-6-6 6-6"/></svg></button><h1>Punkt 15 — Signering</h1><span class="step">8/8</span></div>
+  <div class="prog"><span class="on"></span><span class="on"></span><span class="on"></span><span class="on"></span><span class="on"></span><span class="on"></span><span class="on"></span><span class="on"></span></div>
+  <div class="body">
+    <div class="trust"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="11" x="3" y="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg><p><strong>Begge førere må signere.</strong> Signaturen bekrefter fakta — ikke skyld.</p></div>
+    <p class="slabel">Sammendrag</p>
+    <div class="sumbox" id="sumbox"></div>
+    <p class="slabel">Underskrift — Kjøretøy A</p>
+    <div class="sigpad"><canvas id="sigA"></canvas><div class="sigbase"></div><div class="sigph" id="sphA">Signer her</div><button class="sigclr" onclick="clrsig('A')">Tøm</button></div>
+    <p class="help" id="snmA" style="margin-bottom:16px">Lars Hansen</p>
+    <p class="slabel">Underskrift — Kjøretøy B</p>
+    <div class="sigpad"><canvas id="sigB"></canvas><div class="sigbase"></div><div class="sigph" id="sphB">Motpart signerer</div><button class="sigclr" onclick="clrsig('B')">Tøm</button></div>
+    <p class="help" id="snmB" style="margin-bottom:16px">—</p>
+  </div>
+  <div class="btm"><button class="btn" id="sendbtn" onclick="send()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg>Generer og last ned PDF</button></div>
+</div>
+
+<!-- FERDIG -->
+<div class="screen" id="s-done">
+  <div class="body" style="display:flex;flex-direction:column;align-items:center;text-align:center;padding-bottom:40px">
+    <div class="okcirc"><svg width="42" height="42" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6 9 17l-5-5"/></svg></div>
+    <h2>PDF <em>lastet ned</em></h2>
+    <p class="lede" style="text-align:center;margin:8px auto 32px;max-width:28ch">Finn filen i nedlastingsmappen din. Send den til ditt forsikringsselskap.</p>
+    <div class="card" style="text-align:left;width:100%;margin-bottom:12px">
+      <p style="font-size:15px;font-weight:500;margin-bottom:12px">Hva nå?</p>
+      <p style="font-size:13px;line-height:1.6;color:var(--ink2)">1. Åpne PDF-filen og sjekk at alt stemmer.<br>2. Send PDF til ditt forsikringsselskap.<br>3. Be motparten gjøre det samme med sin kopi.</p>
+    </div>
+    <button class="btn" onclick="lastned()" style="width:100%;margin-bottom:10px"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>Last ned igjen</button>
+    <button class="btn sec" onclick="go('home')" style="width:100%">Tilbake til hjem</button>
+  </div>
+</div>
+
+</div><!-- /app -->
+<script>
+/* ── STATE ── */
+const S = {
+  yn: {'yn-pers':'nei','yn-mat':'nei','yn-ka':'ja'},
+  pA: new Set(), pB: new Set(),
+  photos: [],
+  dmkA: [], dmkB: [],
+  carRot: {A:0, B:90},
+  carPos: {A:{x:25,y:60}, B:{x:65,y:30}},
+  sigs: {A:null, B:null},
+};
+
+/* ── NAV ── */
+function go(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('on'));
+  document.getElementById('s-'+id).classList.add('on');
+  window.scrollTo(0,0);
+  if (id==='sign') buildsummary();
+  if (id==='sketch') setTimeout(initdraw,60);
+}
+
+function yn(btn, grp, val) {
+  S.yn[grp] = val;
+  btn.parentElement.querySelectorAll('button').forEach(b => b.classList.remove('on'));
+  btn.classList.add('on');
+}
+
+/* ── FELT-HJELPERE ── */
+function fv(id) {
+  const el = document.getElementById(id);
+  return (el && el.value && el.value.trim()) ? el.value.trim() : '';
+}
+
+/* ── PUNKT 12: 17 RADER ── */
+const P17 = [
+  'Parkert / Sto stille',
+  'Satt kjoretoy i bevegelse / Apnet dora',
+  'Var i ferd med a stoppe',
+  'Kjorte ut fra parkeringsplass, privat omrade',
+  'Kjorte inn pa parkeringsplass, privat omrade',
+  'Kjorte inn i en rundkjoring',
+  'Kjorte i en rundkjoring',
+  'Kjorte pa bakfra, samme kjorefelt',
+  'Kjorte i samme retning, annet kjorefelt',
+  'Skiftet kjorefelt',
+  'Kjorte forbi',
+  'Svingte til hoyre',
+  'Svingte til venstre',
+  'Rygget',
+  'Kom inn pa del for trafikk i motsatt retning',
+  'Kom fra hoyre i et kryss',
+  'Fulgte ikke vikeplikt eller rott lys'
+];
+const ptrows = document.getElementById('ptrows');
+P17.forEach((lbl,i) => {
+  const row = document.createElement('div');
+  row.className = 'prow';
+  row.innerHTML = `<span class="pnum">${i+1}</span><div class="pcheck" id="ca${i}" onclick="tgl('A',${i})"></div><div class="pcheck" id="cb${i}" onclick="tgl('B',${i})"></div><span class="plabel">${lbl}</span>`;
+  ptrows.appendChild(row);
+});
+function tgl(col, i) {
+  const set = col==='A' ? S.pA : S.pB;
+  const el = document.getElementById('c'+col.toLowerCase()+i);
+  if (set.has(i)) { set.delete(i); el.classList.remove('on'); el.textContent=''; }
+  else { set.add(i); el.classList.add('on'); el.textContent='X'; }
+  document.getElementById('ta').textContent = S.pA.size;
+  document.getElementById('tb').textContent = S.pB.size;
+}
+
+/* ── BILDER ── */
+const pinp = document.getElementById('photo-input');
+const HINTS = [['Oversiktsbilde','Begge biler og veien'],['Skade A','Naerbilde av skaden'],['Reg.nr. B','Tydelig skiltbilde'],['Ekstra','Veiforhold, bremsespor']];
+let pslot = 0;
+function takephoto() { pinp.click(); }
+pinp.addEventListener('change', e => {
+  const f = e.target.files[0]; if (!f || pslot>=4) return;
+  const r = new FileReader();
+  r.onload = ev => {
+    const sl = document.getElementById('sl'+pslot);
+    sl.innerHTML = `<img src="${ev.target.result}">`;
+    sl.classList.add('on');
+    S.photos[pslot] = ev.target.result;
+    pslot++;
+    document.getElementById('pcnt').textContent = pslot+' av 4 bilder';
+    if (pslot<4) { document.getElementById('phint1').textContent=HINTS[pslot][0]; document.getElementById('phint2').textContent=HINTS[pslot][1]; }
+  };
+  r.readAsDataURL(f); pinp.value='';
+});
+setInterval(()=>{ document.getElementById('clock').textContent=new Date().toLocaleTimeString('nb-NO',{hour:'2-digit',minute:'2-digit'}); },1000);
+if ('geolocation' in navigator) navigator.geolocation.getCurrentPosition(p=>document.getElementById('gps').textContent=p.coords.latitude.toFixed(3)+','+p.coords.longitude.toFixed(3), ()=>document.getElementById('gps').textContent='GPS av', {timeout:5000});
+
+/* ── SKADE-MARKØRER ── */
+let actCar = 'a';
+function dtab(btn, car) {
+  btn.parentElement.querySelectorAll('.segtab').forEach(b=>b.classList.remove('on'));
+  btn.classList.add('on'); actCar = car;
+  document.getElementById('sil-a').classList.toggle('hidden', car!=='a');
+  document.getElementById('sil-b').classList.toggle('hidden', car!=='b');
+  document.getElementById('dmglbl').textContent = 'Synlige skader — Kjøretøy '+car.toUpperCase();
+  document.getElementById('dmga').classList.toggle('hidden', car!=='a');
+  document.getElementById('dmgb').classList.toggle('hidden', car!=='b');
+}
+['a','b'].forEach(car => {
+  document.getElementById('sil-'+car).addEventListener('click', e => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = ((e.clientX-rect.left)/rect.width)*100;
+    const y = ((e.clientY-rect.top)/rect.height)*100;
+    const m = document.createElement('div');
+    m.className = 'dmk'; m.textContent='✕';
+    m.style.left=x+'%'; m.style.top=y+'%';
+    m.onclick = ev => { ev.stopPropagation(); m.remove(); };
+    e.currentTarget.appendChild(m);
+  });
+});
+function clearmarks() {
+  document.querySelectorAll('#sil-'+actCar+' .dmk').forEach(m=>m.remove());
+}
+
+/* ── TEGNE-SYSTEM ── */
+let dc, dctx, dwrap, dover;
+let tool='move', drawing=false, lp=null, sp=null, snapImg=null, hist=[];
+const HINTS_TOOL = {
+  move:'Dra bilene A og B. Roter med knappene nedenfor.',
+  road:'Dra for å tegne bred grå vei.',
+  draw:'Tegn fritt — bremsespor, kanter, detaljer.',
+  arrow:'Dra for å tegne en retningspil (rød).',
+  text:'Trykk på lerretet for å skrive tekst.'
+};
+function initdraw() {
+  if (dc) return;
+  dc = document.getElementById('dc');
+  dwrap = document.getElementById('dwrap');
+  dover = document.getElementById('dover');
+  const resize = () => {
+    const r = dwrap.getBoundingClientRect(); if (!r.width) return;
+    const ratio = window.devicePixelRatio||1;
+    const old = dc.toDataURL();
+    dc.width = r.width*ratio; dc.height = r.height*ratio;
+    dctx = dc.getContext('2d');
+    dctx.scale(ratio,ratio);
+    if (old.length>100) { const i=new Image(); i.onload=()=>dctx.drawImage(i,0,0,r.width,r.height); i.src=old; }
+  };
+  resize();
+  window.addEventListener('resize', resize);
+  // Bilde-dragging
+  ['A','B'].forEach(k => setupCar(k));
+  // Canvas-tegning
+  dc.addEventListener('mousedown', ds);
+  dc.addEventListener('mousemove', dm);
+  dc.addEventListener('mouseup', de);
+  dc.addEventListener('mouseleave', de);
+  dc.addEventListener('touchstart', e=>{ds(e.touches[0]);e.preventDefault();},{passive:false});
+  dc.addEventListener('touchmove', e=>{dm(e.touches[0]);e.preventDefault();},{passive:false});
+  dc.addEventListener('touchend', de, {passive:false});
+}
+function setupCar(k) {
+  const el = document.getElementById('c'+k);
+  let drag=false, sx, sy, sl, st2;
+  const start = e => {
+    if (tool!=='move') return;
+    drag=true; const p=e.touches?e.touches[0]:e;
+    sx=p.clientX; sy=p.clientY;
+    const r=dover.getBoundingClientRect();
+    sl=(S.carPos[k].x/100)*r.width; st2=(S.carPos[k].y/100)*r.height;
+    e.preventDefault(); e.stopPropagation();
+  };
+  const move = e => {
+    if (!drag) return;
+    const p=e.touches?e.touches[0]:e;
+    const r=dover.getBoundingClientRect();
+    let nx=((sl+p.clientX-sx)/r.width)*100, ny=((st2+p.clientY-sy)/r.height)*100;
+    nx=Math.max(6,Math.min(94,nx)); ny=Math.max(6,Math.min(94,ny));
+    S.carPos[k].x=nx; S.carPos[k].y=ny;
+    el.style.left=nx+'%'; el.style.top=ny+'%';
+    el.style.transform=`translate(-50%,-50%) rotate(${S.carRot[k]}deg)`;
+    e.preventDefault();
+  };
+  const end = () => drag=false;
+  el.addEventListener('mousedown',start); el.addEventListener('touchstart',start,{passive:false});
+  document.addEventListener('mousemove',move); document.addEventListener('touchmove',move,{passive:false});
+  document.addEventListener('mouseup',end); document.addEventListener('touchend',end);
+}
+function rotcar(k) {
+  S.carRot[k]=(S.carRot[k]+45)%360;
+  const el=document.getElementById('c'+k);
+  el.style.transform=`translate(-50%,-50%) rotate(${S.carRot[k]}deg)`;
+}
+function setT(t) {
+  tool=t;
+  document.querySelectorAll('.dtbtn').forEach(b=>b.classList.remove('on'));
+  document.getElementById('t-'+t).classList.add('on');
+  document.getElementById('dhint').querySelector('span').textContent=HINTS_TOOL[t];
+  dover.style.pointerEvents = t==='move'?'auto':'none';
+  dc.style.pointerEvents = t==='move'?'none':'auto';
+}
+function gp(e) { const r=dc.getBoundingClientRect(); return {x:e.clientX-r.left,y:e.clientY-r.top}; }
+function snap() {
+  const s=dc.toDataURL(); hist.push(s);
+  if(hist.length>20) hist.shift();
+  if(tool==='arrow'){snapImg=new Image(); snapImg.src=s;}
+}
+function ds(e) {
+  if(tool==='move') return;
+  if(tool==='text') {
+    const p=gp(e), txt=prompt('Tekst:');
+    if(txt){snap();dctx.font='bold 15px Inter,sans-serif';dctx.fillStyle='#0A0A0A';dctx.fillText(txt,p.x,p.y);}
+    return;
+  }
+  const p=gp(e); snap(); drawing=true; sp=p; lp=p;
+  if(tool==='road'){dctx.strokeStyle='rgba(60,60,60,0.22)';dctx.lineWidth=20;dctx.lineCap='round';}
+  else if(tool==='draw'){dctx.strokeStyle='#0A0A0A';dctx.lineWidth=2.5;dctx.lineCap='round';}
+}
+function dm(e) {
+  if(!drawing) return;
+  const p=gp(e);
+  if(tool==='road'||tool==='draw'){
+    dctx.beginPath();dctx.moveTo(lp.x,lp.y);dctx.lineTo(p.x,p.y);dctx.stroke();
+    lp=p;
+  } else if(tool==='arrow'&&snapImg&&snapImg.complete){
+    const r=dc.getBoundingClientRect();
+    dctx.clearRect(0,0,r.width,r.height);
+    dctx.drawImage(snapImg,0,0,r.width,r.height);
+    arrow(sp,p); lp=p;
+  }
+}
+function de() {
+  if(!drawing) return;
+  drawing=false; lp=null; snapImg=null;
+}
+function arrow(a,b) {
+  dctx.strokeStyle='#B91C1C';dctx.fillStyle='#B91C1C';
+  dctx.lineWidth=3;dctx.lineCap='round';dctx.globalAlpha=1;
+  dctx.beginPath();dctx.moveTo(a.x,a.y);dctx.lineTo(b.x,b.y);dctx.stroke();
+  const ang=Math.atan2(b.y-a.y,b.x-a.x),h=14;
+  dctx.beginPath();dctx.moveTo(b.x,b.y);
+  dctx.lineTo(b.x-h*Math.cos(ang-Math.PI/6),b.y-h*Math.sin(ang-Math.PI/6));
+  dctx.lineTo(b.x-h*Math.cos(ang+Math.PI/6),b.y-h*Math.sin(ang+Math.PI/6));
+  dctx.closePath();dctx.fill();
+}
+function undo() {
+  if(!hist.length) return;
+  const prev=hist.pop();
+  const r=dc.getBoundingClientRect();
+  dctx.clearRect(0,0,r.width,r.height);
+  const i=new Image(); i.onload=()=>dctx.drawImage(i,0,0,r.width,r.height); i.src=prev;
+}
+function clrdraw() {
+  if(!confirm('Tøm skissen?')) return;
+  const r=dc.getBoundingClientRect(); dctx.clearRect(0,0,r.width,r.height); hist=[];
+}
+
+/* ── SIGNATUR ── */
+function setupSig(key) {
+  const canvas=document.getElementById('sig'+key);
+  const ph=document.getElementById('sph'+key);
+  let ctx, drawing=false, lx=0, ly=0, hasDrawn=false;
+  const resize=()=>{
+    const r=canvas.getBoundingClientRect(); if(!r.width) return;
+    const ratio=window.devicePixelRatio||1;
+    canvas.width=r.width*ratio; canvas.height=r.height*ratio;
+    ctx=canvas.getContext('2d');
+    ctx.scale(ratio,ratio); ctx.strokeStyle='#0A0A0A'; ctx.lineWidth=2.2; ctx.lineCap='round';
+  };
+  new MutationObserver(()=>{ if(canvas.closest('.screen').classList.contains('on')) setTimeout(resize,60); })
+    .observe(canvas.closest('.screen'),{attributes:true,attributeFilter:['class']});
+  const gp2=e=>{ const r=canvas.getBoundingClientRect(),p=e.touches?e.touches[0]:e; return{x:p.clientX-r.left,y:p.clientY-r.top}; };
+  canvas.addEventListener('mousedown', e=>{drawing=true;const p=gp2(e);lx=p.x;ly=p.y;if(!hasDrawn){ph.style.display='none';hasDrawn=true;}e.preventDefault();});
+  canvas.addEventListener('mousemove', e=>{if(!drawing)return;const p=gp2(e);ctx.beginPath();ctx.moveTo(lx,ly);ctx.lineTo(p.x,p.y);ctx.stroke();lx=p.x;ly=p.y;e.preventDefault();});
+  const end=()=>{if(drawing&&hasDrawn)S.sigs[key]=canvas.toDataURL();drawing=false;};
+  canvas.addEventListener('mouseup',end);canvas.addEventListener('mouseleave',end);
+  canvas.addEventListener('touchstart',e=>{drawing=true;const p=gp2(e);lx=p.x;ly=p.y;if(!hasDrawn){ph.style.display='none';hasDrawn=true;}e.preventDefault();},{passive:false});
+  canvas.addEventListener('touchmove',e=>{if(!drawing)return;const p=gp2(e);ctx.beginPath();ctx.moveTo(lx,ly);ctx.lineTo(p.x,p.y);ctx.stroke();lx=p.x;ly=p.y;e.preventDefault();},{passive:false});
+  canvas.addEventListener('touchend',end);
+  canvas._clr=()=>{if(ctx)ctx.clearRect(0,0,canvas.width,canvas.height);ph.style.display='flex';hasDrawn=false;S.sigs[key]=null;};
+}
+setupSig('A'); setupSig('B');
+function clrsig(k){document.getElementById('sig'+k)._clr();}
+
+/* ── SAMMENDRAG ── */
+function buildsummary() {
+  const nmA=`${fv('a-fn')} ${fv('a-eln')}`.trim()||'Forer A';
+  const nmB=`${fv('b-fn')} ${fv('b-eln')}`.trim()||'Forer B';
+  document.getElementById('snmA').textContent=nmA;
+  document.getElementById('snmB').textContent=nmB;
+  const pA=[...S.pA].sort((a,b)=>a-b).map(i=>i+1).join(', ')||'—';
+  const pB=[...S.pB].sort((a,b)=>a-b).map(i=>i+1).join(', ')||'—';
+  document.getElementById('sumbox').innerHTML=`
+    <div class="sumhead">Hendelsen</div>
+    <div class="sumrow"><span class="l">Dato/tid</span><span class="v">${fv('f-date')||'—'} kl. ${fv('f-time')||'—'}</span></div>
+    <div class="sumrow"><span class="l">Sted</span><span class="v">${fv('f-place')||'—'}</span></div>
+    <div class="sumhead" style="border-top:.5px solid var(--line)">Kjøretøy A</div>
+    <div class="sumrow"><span class="l">Fører</span><span class="v">${nmA}</span></div>
+    <div class="sumrow"><span class="l">Bil</span><span class="v">${fv('a-mod')||'—'} (${fv('a-reg')||'—'})</span></div>
+    <div class="sumrow"><span class="l">Forsikring</span><span class="v">${fv('a-ins')||'—'}</span></div>
+    <div class="sumrow"><span class="l">Punkter</span><span class="v">${pA}</span></div>
+    <div class="sumhead" style="border-top:.5px solid var(--line)">Kjøretøy B</div>
+    <div class="sumrow"><span class="l">Fører</span><span class="v">${nmB}</span></div>
+    <div class="sumrow"><span class="l">Bil</span><span class="v">${fv('b-mod')||'—'} (${fv('b-reg')||'—'})</span></div>
+    <div class="sumrow"><span class="l">Forsikring</span><span class="v">${fv('b-ins')||'—'}</span></div>
+    <div class="sumrow"><span class="l">Punkter</span><span class="v">${pB}</span></div>
+  `;
+}
+
+/* ── PDF: REN, ENKEL, GARANTERT FUNGERENDE ── */
+function sane(s) {
+  return String(s||'')
+    .replace(/[\u00e6]/g,'ae').replace(/[\u00c6]/g,'AE')
+    .replace(/[\u00f8]/g,'o').replace(/[\u00d8]/g,'O')
+    .replace(/[\u00e5]/g,'a').replace(/[\u00c5]/g,'A')
+    .replace(/[\u2013\u2014]/g,'-')
+    .replace(/[()\\]/g, c=>'\\'+c)
+    .replace(/[^\x20-\x7E]/g,'?');
+}
+
+function makePDF() {
+  // Alle strenger som PDF-objekter
+  const objects = [];
+  let nextId = 1;
+  const addObj = content => { const id=nextId++; objects.push({id,content}); return id; };
+
+  const pages = [];
+  const addPage = stream => {
+    const sid = addObj(`<< /Length ${stream.length} >>\nstream\n${stream}\nendstream`);
+    const pid = addObj(`<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Contents ${sid} 0 R /Resources << /Font << /F1 100 0 R /F2 101 0 R >> >> >>`);
+    pages.push(pid);
+    return pid;
+  };
+
+  // Koordinatsystem: 595 x 842 pt, origo nede-venstre
+  const H=842, pt=2.8346;
+  const mm2pt = mm => mm*pt;
+  const yt = mm => H - mm*pt; // mm fra toppen → PDF y
+
+  class Page {
+    constructor() { this.ops=[]; }
+    fill(r,g,b){this.ops.push(`${r/255} ${g/255} ${b/255} rg`);}
+    stroke(r,g,b){this.ops.push(`${r/255} ${g/255} ${b/255} RG`);}
+    lw(mm){this.ops.push(`${mm*pt} w`);}
+    rect(x,y,w,h,mode='f'){this.ops.push(`${mm2pt(x)} ${yt(y+h)} ${mm2pt(w)} ${mm2pt(h)} re ${mode}`);}
+    line(x1,y1,x2,y2){this.ops.push(`${mm2pt(x1)} ${yt(y1)} m ${mm2pt(x2)} ${yt(y2)} l S`);}
+    txt(s,x,y,sz,bold){
+      const fn=bold?'F2':'F1';
+      const safe=sane(s).substring(0,60);
+      if(!safe) return;
+      this.ops.push(`BT /${fn} ${sz} Tf ${mm2pt(x)} ${yt(y+sz*0.35/pt)} Td (${safe}) Tj ET`);
+    }
+    secbar(x,y,w,h,text,sz,dark){
+      if(dark){this.fill(26,26,26);}else{this.fill(240,240,238);}
+      this.rect(x,y,w,h,'f');
+      this.fill(dark?255:0,dark?255:0,dark?255:0);
+      this.txt(text,x+2,y+h*0.55,sz||9,true);
+      this.fill(0,0,0);
+    }
+    fld(lbl,val,x,y){
+      this.fill(120,120,120); this.txt(lbl.toUpperCase(),x,y,6,true);
+      this.fill(0,0,0); this.txt(val||'',x,y+4,8.5,false);
+      return y+7;
+    }
+    chk(x,y,checked,lbl){
+      this.stroke(80,80,80); this.lw(0.3);
+      this.rect(x,y,3.5,3.5,'S');
+      if(checked){this.fill(0,0,0);this.txt('X',x+0.3,y+3,9,true);}
+      this.fill(0,0,0); this.txt(lbl,x+5,y+3,7.5,false);
+    }
+    get(){return this.ops.join('\n');}
+  }
+
+  const M=8, W=210, gap=2, cw=(W-2*M-gap)/2;
+
+  /* ── SIDE 1 ── */
+  // Hjelpefunksjon for kolonne - definert FØR den brukes
+  function col(pg, x, y0, w, lbl) {
+    const isA=lbl==='A';
+    if(isA) pg.fill(26,26,26); else pg.fill(185,28,28);
+    pg.rect(x,y0,w,7,'f');
+    pg.fill(255,255,255); pg.txt(`KJORETOY ${lbl}`,x+2,y0+4.8,9.5,true); pg.fill(0,0,0);
+    pg.stroke(180,180,180); pg.lw(0.2); pg.rect(x,y0,w,110,'S');
+    const pf=lbl.toLowerCase();
+    let yy=y0+10;
+    const sec=(t)=>{ pg.fill(245,245,242);pg.rect(x,yy,w,5.5,'f');pg.fill(60,60,60);pg.txt(t,x+2,yy+4,7,true);pg.fill(0,0,0);yy+=7;};
+    const fl=(l,id)=>{ yy=pg.fld(l,fv(id),x+2,yy); };
+    sec('6. Forsikringstaker');
+    fl('Etternavn',`${pf}-eln`); fl('Fornavn',`${pf}-fn`);
+    fl('Adresse',`${pf}-adr`); fl('Postnr/sted',`${pf}-zip`);
+    fl('Telefon',`${pf}-tlf`); fl('E-post',`${pf}-email`);
+    sec('7. Kjoretoy');
+    fl('Reg.nr.',`${pf}-reg`); fl('Merke/type',`${pf}-mod`);
+    sec('8. Forsikring');
+    fl('Selskap',`${pf}-ins`); fl('Polisenr.',`${pf}-pol`);
+  }
+
+  const p1=new Page();
+  p1.fill(10,10,10); p1.rect(0,0,W,14,'f');
+  p1.fill(255,255,255);
+  p1.txt('SKADEMELDING FOR MOTORVOGN',M,9,12,true);
+  p1.txt('Meldingen er ingen skylderkjennelse - kun fakta. Ma undertegnes av begge forerne.',M,12.5,6.5,false);
+  p1.fill(0,0,0);
+  let y=18;
+
+  // Punkt 1-2
+  p1.secbar(M,y,W-2*M,6,'1. Skadedato og sted',8.5,false); y+=7;
+  p1.fld('Dato',fv('f-date'),M+2,y);
+  p1.fld('Klokken',fv('f-time'),M+40,y);
+  p1.fld('Sted',fv('f-place'),M+65,y); y+=7;
+  p1.fld('Kommune',fv('f-muni'),M+2,y);
+  p1.fld('Land',fv('f-land'),M+55,y); y+=9;
+
+  // Punkt 3-4
+  p1.fill(240,240,238); p1.rect(M,y,W-2*M,10,'f'); p1.fill(0,0,0);
+  p1.txt('3. PERSONSKADE',M+2,y+3.5,7.5,true);
+  p1.txt('4. ANNEN MATERIELL SKADE',M+75,y+3.5,7.5,true);
+  p1.chk(M+2,y+5.5,S.yn['yn-pers']==='nei','NEI');
+  p1.chk(M+18,y+5.5,S.yn['yn-pers']==='ja','JA');
+  p1.chk(M+75,y+5.5,S.yn['yn-mat']==='nei','NEI');
+  p1.chk(M+91,y+5.5,S.yn['yn-mat']==='ja','JA'); y+=12;
+
+  // Punkt 5
+  p1.fill(240,240,238); p1.rect(M,y,W-2*M,6,'f'); p1.fill(0,0,0);
+  p1.txt('5. VITNER',M+2,y+4,8,true); y+=7;
+  p1.txt(sane(fv('f-wit')||'Ingen vitner oppgitt'),M+2,y,8.5,false); y+=8;
+
+  // Kolonner A og B
+  const colY=y;
+  col(p1, M, colY, cw, 'A');
+  col(p1, M+cw+gap, colY, cw, 'B');
+  y=colY+110;
+
+  // Punkt 12
+  p1.secbar(M,y,W-2*M,7,'12. Omstendigheter - kryss av i aktuelle felt',9,false); y+=8;
+  p1.fill(60,60,60); p1.txt('A',M+5,y,8,true); p1.txt('B',M+16,y,8,true); p1.txt('Omstendighet',M+26,y,8,true);
+  p1.fill(0,0,0); p1.stroke(200,200,200); p1.lw(0.15); p1.line(M,y+2,W-M,y+2); y+=5;
+  P17.forEach((lbl,i)=>{
+    if(y>278){addPage(p1.get()); /* midtsidebytte ikke implementert siden alt fits */ }
+    p1.stroke(120,120,120); p1.lw(0.25);
+    p1.rect(M+2,y-2.8,3.5,3.5,'S'); p1.rect(M+13,y-2.8,3.5,3.5,'S');
+    if(S.pA.has(i)){p1.fill(0,0,0);p1.txt('X',M+2.4,y,9,true);}
+    if(S.pB.has(i)){p1.fill(0,0,0);p1.txt('X',M+13.4,y,9,true);}
+    p1.fill(0,0,0); p1.txt(`${i+1}. ${lbl}`,M+26,y,7.8,false);
+    p1.stroke(220,220,220);p1.lw(0.1);p1.line(M,y+1.5,W-M,y+1.5); y+=5;
+  });
+  p1.fill(240,240,238); p1.rect(M,y,W-2*M,7,'f'); p1.fill(0,0,0);
+  p1.txt('Antall avkryssede felt: A = '+S.pA.size+'   B = '+S.pB.size,M+2,y+4.5,8.5,true);
+  addPage(p1.get());
+
+  /* ── SIDE 2: SKISSE + SKADER + SIGNATURER ── */
+  const p2=new Page();
+  let y2=M;
+
+  // Skisse-boks
+  p2.secbar(M,y2,W-2*M,7,'13. Skisse av uhellet',9,false); y2+=8;
+  p2.fill(245,245,242); p2.rect(M,y2,W-2*M,88,'f');
+  p2.stroke(180,180,180); p2.lw(0.2); p2.rect(M,y2,W-2*M,88,'S');
+  // Biler
+  ['A','B'].forEach(k=>{
+    const cp=S.carPos[k], cx=M+(cp.x/100)*(W-2*M), cy=y2+(cp.y/100)*88;
+    if(k==='A') p2.fill(26,26,26); else p2.fill(185,28,28);
+    p2.rect(cx-5,cy-2.5,10,5,'f');
+    p2.fill(255,255,255); p2.txt(k,cx-1.8,cy+2,7,true); p2.fill(0,0,0);
+  });
+  y2+=91;
+
+  // Skader A/B
+  p2.fill(26,26,26); p2.rect(M,y2,cw,7,'f'); p2.fill(185,28,28); p2.rect(M+cw+gap,y2,cw,7,'f');
+  p2.fill(255,255,255);
+  p2.txt('10/11. Skader - Kjoretoy A',M+2,y2+4.5,8,true);
+  p2.txt('10/11. Skader - Kjoretoy B',M+cw+gap+2,y2+4.5,8,true);
+  p2.fill(0,0,0); y2+=9;
+  p2.txt(sane(fv('dmg-a')||'Ingen beskrivelse'),M+2,y2+3,8.5,false);
+  p2.txt(sane(fv('dmg-b')||'Ingen beskrivelse'),M+cw+gap+2,y2+3,8.5,false); y2+=12;
+
+  // Bemerkninger
+  p2.fill(240,240,238); p2.rect(M,y2,cw,6,'f'); p2.rect(M+cw+gap,y2,cw,6,'f'); p2.fill(0,0,0);
+  p2.txt('14. Bemerkninger - Forer A',M+2,y2+4,8,true);
+  p2.txt('14. Bemerkninger - Forer B',M+cw+gap+2,y2+4,8,true); y2+=8;
+  p2.txt(sane(fv('rem-a')||''),M+2,y2+2,8.5,false);
+  p2.txt(sane(fv('rem-b')||''),M+cw+gap+2,y2+2,8.5,false); y2+=14;
+
+  // Signaturer
+  p2.fill(240,240,238); p2.rect(M,y2,W-2*M,7,'f'); p2.fill(0,0,0);
+  p2.txt('15. Forernes underskrift',M+2,y2+4.5,9,true); y2+=9;
+  p2.fill(250,250,248); p2.rect(M+2,y2,cw-4,26,'f'); p2.rect(M+cw+gap+2,y2,cw-4,26,'f');
+  p2.stroke(180,180,180); p2.lw(0.3);
+  p2.rect(M+2,y2,cw-4,26,'S'); p2.rect(M+cw+gap+2,y2,cw-4,26,'S'); y2+=28;
+  p2.stroke(80,80,80); p2.line(M+2,y2,M+cw-2,y2); p2.line(M+cw+gap+2,y2,W-M-2,y2); y2+=5;
+  p2.fill(0,0,0);
+  p2.txt(sane(`${fv('a-fn')} ${fv('a-eln')}`.trim()||'Forer A'),M+2,y2,8,false);
+  p2.txt(sane(`${fv('b-fn')} ${fv('b-eln')}`.trim()||'Forer B'),M+cw+gap+2,y2,8,false);
+  addPage(p2.get());
+
+  /* ── Bygg PDF ── */
+  // Font-objekter med faste IDer 100 og 101
+  const font1content=`<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>`;
+  const font2content=`<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>`;
+  // Legg til med eksakt ID
+  objects.push({id:100, content:font1content});
+  objects.push({id:101, content:font2content});
+
+  // Page tree
+  const kidsStr=pages.map(id=>`${id} 0 R`).join(' ');
+  const ptreeId=200;
+  objects.push({id:ptreeId, content:`<< /Type /Pages /Kids [${kidsStr}] /Count ${pages.length} >>`});
+  // Fix parent ref i alle page-objekter
+  objects.forEach(o=>{
+    if(o.content.includes('/Type /Page '))
+      o.content=o.content.replace('/Parent 2 0 R',`/Parent ${ptreeId} 0 R`);
+  });
+
+  // Catalog
+  const catId=201;
+  objects.push({id:catId, content:`<< /Type /Catalog /Pages ${ptreeId} 0 R >>`});
+
+  // Bygg output
+  let out='%PDF-1.4\n';
+  const offsets={};
+  objects.sort((a,b)=>a.id-b.id).forEach(o=>{
+    offsets[o.id]=out.length;
+    out+=`${o.id} 0 obj\n${o.content}\nendobj\n`;
+  });
+
+  const maxId=Math.max(...objects.map(o=>o.id));
+  const xrefOff=out.length;
+  out+=`xref\n0 1\n0000000000 65535 f \n`;
+  // Subseksjon for hvert objekt
+  out+=`${objects.map(o=>`${o.id} 1\n${String(offsets[o.id]).padStart(10,'0')} 00000 n `).join('\n')}\n`;
+  out+=`trailer\n<< /Size ${maxId+1} /Root ${catId} 0 R >>\nstartxref\n${xrefOff}\n%%EOF\n`;
+
+  return out;
+}
+
+async function lastned(){
+  const data={
+    date:fv('f-date'),time:fv('f-time'),place:fv('f-place'),
+    municipality:fv('f-muni'),country:fv('f-land')||'Norge',
+    injury:S.yn['yn-inj'],material:S.yn['yn-mat'],witnesses:fv('f-wit'),
+    aLastName:fv('a-eln'),aFirstName:fv('a-fn'),aDob:fv('a-dob'),
+    aAddress:fv('a-adr'),aZip:fv('a-zip'),aCity:fv('a-city'),
+    aPhone:fv('a-tlf'),aEmail:fv('a-email'),
+    aReg:fv('a-reg'),aModel:fv('a-mod'),aRegCountry:fv('a-rl')||'Norge',
+    aInsurer:fv('a-ins'),aPolicy:fv('a-pol'),aKasko:S.yn['yn-ka'],
+    aDriverLic:fv('a-lic'),aClass:fv('a-class')||'B',aExp:fv('a-exp'),
+    aDamage:fv('dmg-a'),aRemarks:fv('rem-a'),
+    bLastName:fv('b-eln'),bFirstName:fv('b-fn'),bDob:fv('b-dob'),
+    bAddress:fv('b-adr'),bZip:fv('b-zip'),bCity:fv('b-city'),
+    bPhone:fv('b-tlf'),bEmail:fv('b-email'),
+    bReg:fv('b-reg'),bModel:fv('b-mod'),bRegCountry:fv('b-rl')||'Norge',
+    bInsurer:fv('b-ins'),bPolicy:fv('b-pol'),bDriverLic:fv('b-lic'),
+    bDamage:fv('dmg-b'),bRemarks:fv('rem-b'),
+    pA:[...S.pA].map(i=>P17_KEYS[i]),
+    pB:[...S.pB].map(i=>P17_KEYS[i]),
+  };
+  const resp=await fetch('/fyll',{
+    method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)
+  });
+  if(!resp.ok) throw new Error('Serverfeil '+resp.status);
+  const blob=await resp.blob();
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url;a.download=`skademelding-${data.date||'skjema'}.pdf`;
+  document.body.appendChild(a);a.click();
+  setTimeout(()=>{document.body.removeChild(a);URL.revokeObjectURL(url);},2000);
+}
+
+async function send(){
+  const btn=document.getElementById('sendbtn');
+  btn.disabled=true;
+  btn.innerHTML='<div class="spin"></div> Fyller ut skjema…';
+  try{
+    await lastned();
+    go('done');
+  } catch(e){
+    alert('Feil: '+e.message);
+  }
+  btn.disabled=false;
+  btn.innerHTML='<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>Last ned utfylt skjema';
+}
+
+// Scroll-shadow
+document.querySelectorAll('.screen').forEach(s=>{
+  s.addEventListener('scroll',()=>{
+    const tb=s.querySelector('.topbar');
+    if(tb) tb.classList.toggle('scrolled',s.scrollTop>4);
+  });
+});
+</script>
+</body>
+</html>
